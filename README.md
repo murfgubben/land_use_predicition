@@ -1,6 +1,6 @@
 # Satellite classifier
 
-Training code for a CPU-friendly EuroSAT RGB image classifier.
+Training code for a CPU-friendly EuroSAT image classifier.
 
 ## Dataset layout
 
@@ -17,6 +17,20 @@ data/
 The loader also accepts one wrapper directory, such as
 `data/EuroSAT_RGB/AnnualCrop/image_1.jpg`. Set `SATELLITE_DATA_DIR` to use a
 different location.
+
+The all-bands EuroSAT distribution is supported as well:
+
+```text
+data/
+└── EuroSATallBands/
+    └── AnnualCrop/
+        └── AnnualCrop_1.tif
+```
+
+These TIFFs contain 13 Sentinel-2 bands. The loader selects B4/B3/B2 (true
+color) so the input remains compatible with the classifier's three-channel
+backbone. The accompanying CSV split files and `label_map.json` are not
+required; class directories are used as the source of truth.
 
 ## Current pipeline
 
