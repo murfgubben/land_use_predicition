@@ -149,7 +149,10 @@ def _read_tiff(contents: np.ndarray) -> np.ndarray:
             f"TIFF has {image.shape[-1]} bands, but RGB band indexes are "
             f"{DATA_CONFIG.tiff_rgb_bands}."
         )
-    return image[..., DATA_CONFIG.tiff_rgb_bands].astype(np.float32)
+    rgb = image[..., DATA_CONFIG.tiff_rgb_bands].astype(np.float32)
+    return np.clip(
+        rgb / DATA_CONFIG.tiff_reflectance_scale * 255.0, 0.0, 255.0
+    )
 
 
 def _decode_tiff(path: tf.Tensor) -> tf.Tensor:

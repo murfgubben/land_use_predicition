@@ -46,3 +46,21 @@ Install the pinned dependencies with:
 ```bash
 python3 -m pip install -r requirements.txt
 ```
+
+## Training and evaluation
+
+Train the classifier and write the model, class mapping, and epoch metrics to
+`artifacts/`:
+
+```bash
+python3 -m src.train
+```
+
+Evaluate the saved model once on the held-out test split:
+
+```bash
+python3 -m src.evaluate
+```
+
+Use `--data-dir` and `--artifacts-dir` with either command to override the
+configured locations.
