@@ -17,6 +17,10 @@ class DataConfig:
     """Dataset and input-pipeline settings."""
 
     image_size: tuple[int, int] = (64, 64)
+    # EuroSAT all-bands TIFFs use Sentinel-2 band order:
+    # B1, B2, B3, B4, B5, B6, B7, B8, B8A, B9, B10, B11, B12.
+    # Select B4/B3/B2 to provide the RGB input expected by the classifier.
+    tiff_rgb_bands: tuple[int, int, int] = (3, 2, 1)
     batch_size: int = 32
     seed: int = 42
     train_ratio: float = 0.70
@@ -49,4 +53,3 @@ class TrainingConfig:
 DATA_CONFIG = DataConfig()
 MODEL_CONFIG = ModelConfig()
 TRAINING_CONFIG = TrainingConfig()
-
