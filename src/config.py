@@ -1,0 +1,52 @@
+"""Central configuration for the satellite image classifier."""
+
+from dataclasses import dataclass
+import os
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = Path(os.getenv("SATELLITE_DATA_DIR", PROJECT_ROOT / "data"))
+ARTIFACTS_DIR = Path(
+    os.getenv("SATELLITE_ARTIFACTS_DIR", PROJECT_ROOT / "artifacts")
+)
+
+
+@dataclass(frozen=True)
+class DataConfig:
+    """Dataset and input-pipeline settings."""
+
+    image_size: tuple[int, int] = (64, 64)
+    batch_size: int = 32
+    seed: int = 42
+    train_ratio: float = 0.70
+    validation_ratio: float = 0.15
+    test_ratio: float = 0.15
+    shuffle_buffer_size: int = 2_048
+    num_parallel_calls: int = -1
+
+
+@dataclass(frozen=True)
+class ModelConfig:
+    """Model settings used by the transfer-learning model."""
+
+    backbone_name: str = "MobileNetV2"
+    backbone_weights: str | None = "imagenet"
+    dropout_rate: float = 0.2
+    initial_learning_rate: float = 1e-3
+    fine_tuning_learning_rate: float = 1e-5
+    fine_tune_layers: int = 20
+
+
+@dataclass(frozen=True)
+class TrainingConfig:
+    """Training-loop settings."""
+
+    epochs: int = 15
+    fine_tune_epochs: int = 5
+
+
+DATA_CONFIG = DataConfig()
+MODEL_CONFIG = ModelConfig()
+TRAINING_CONFIG = TrainingConfig()
+
