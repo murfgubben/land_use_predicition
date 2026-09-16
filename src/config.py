@@ -21,6 +21,7 @@ class DataConfig:
     # B1, B2, B3, B4, B5, B6, B7, B8, B8A, B9, B10, B11, B12.
     # Select B4/B3/B2 to provide the RGB input expected by the classifier.
     tiff_rgb_bands: tuple[int, int, int] = (3, 2, 1)
+    tiff_reflectance_scale: float = 10_000.0
     batch_size: int = 32
     seed: int = 42
     train_ratio: float = 0.70
@@ -40,6 +41,9 @@ class ModelConfig:
     initial_learning_rate: float = 1e-3
     fine_tuning_learning_rate: float = 1e-5
     fine_tune_layers: int = 20
+    artifact_filename: str = "satellite_classifier.keras"
+    class_mapping_filename: str = "class_mapping.json"
+    metrics_filename: str = "training_metrics.csv"
 
 
 @dataclass(frozen=True)
@@ -48,6 +52,7 @@ class TrainingConfig:
 
     epochs: int = 15
     fine_tune_epochs: int = 5
+    verbose: int = 1
 
 
 DATA_CONFIG = DataConfig()
