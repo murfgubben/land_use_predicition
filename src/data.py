@@ -136,9 +136,10 @@ def split_records(
     return tuple(train_records), tuple(validation_records), tuple(test_records)
 
 
-def _read_tiff(contents: np.ndarray) -> np.ndarray:
+def _read_tiff(contents: np.ndarray | bytes) -> np.ndarray:
     """Read an all-bands TIFF and return its RGB bands as float32."""
-    image = tifffile.imread(BytesIO(contents.item()))
+    raw_contents = contents.item() if hasattr(contents, "item") else contents
+    image = tifffile.imread(BytesIO(raw_contents))
     if image.ndim != 3:
         raise ValueError(
             f"Expected a multi-band TIFF with shape [height, width, bands], "
@@ -170,8 +171,11 @@ def _decode_image(path: tf.Tensor, label: tf.Tensor) -> tuple[tf.Tensor, tf.Tens
     image = tf.cond(
         is_tiff,
         lambda: _decode_tiff(path),
-        lambda: tf.image.decode_image(
-            image, channels=3, expand_animations=False
+        lambda: tf.cast(
+            tf.image.decode_image(
+                image, channels=3, expand_animations=False
+            ),
+            tf.float32,
         ),
     )
     image.set_shape([None, None, 3])
