@@ -1,9 +1,11 @@
 """EuroSAT indexing, stratified splitting, and tf.data input pipelines."""
 
 from dataclasses import dataclass
+from io import BytesIO
 from pathlib import Path
 
 import numpy as np
+import tifffile
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
@@ -134,9 +136,41 @@ def split_records(
     return tuple(train_records), tuple(validation_records), tuple(test_records)
 
 
+def _read_tiff(contents: np.ndarray) -> np.ndarray:
+    """Read an all-bands TIFF and return its RGB bands as float32."""
+    image = tifffile.imread(BytesIO(contents.item()))
+    if image.ndim != 3:
+        raise ValueError(
+            f"Expected a multi-band TIFF with shape [height, width, bands], "
+            f"got {image.shape}."
+        )
+    if max(DATA_CONFIG.tiff_rgb_bands) >= image.shape[-1]:
+        raise ValueError(
+            f"TIFF has {image.shape[-1]} bands, but RGB band indexes are "
+            f"{DATA_CONFIG.tiff_rgb_bands}."
+        )
+    return image[..., DATA_CONFIG.tiff_rgb_bands].astype(np.float32)
+
+
+def _decode_tiff(path: tf.Tensor) -> tf.Tensor:
+    contents = tf.io.read_file(path)
+    image = tf.numpy_function(_read_tiff, [contents], tf.float32)
+    image.set_shape([None, None, len(DATA_CONFIG.tiff_rgb_bands)])
+    return image
+
+
 def _decode_image(path: tf.Tensor, label: tf.Tensor) -> tuple[tf.Tensor, tf.Tensor]:
     image = tf.io.read_file(path)
-    image = tf.image.decode_image(image, channels=3, expand_animations=False)
+    is_tiff = tf.strings.regex_full_match(
+        tf.strings.lower(path), r".*\.(tif|tiff)"
+    )
+    image = tf.cond(
+        is_tiff,
+        lambda: _decode_tiff(path),
+        lambda: tf.image.decode_image(
+            image, channels=3, expand_animations=False
+        ),
+    )
     image.set_shape([None, None, 3])
     image = tf.image.resize(image, DATA_CONFIG.image_size)
     return tf.cast(image, tf.float32), label
