@@ -270,6 +270,24 @@ Run training first, or point evaluation at the directory produced by training:
 python3 -m src.evaluate --artifacts-dir /path/to/training/artifacts
 ```
 
+### Predict one image
+
+After training, run inference on any supported image size or aspect ratio.
+JPEG (`.jpg`/`.jpeg`) and PNG (`.png`) files are supported, including
+grayscale and RGBA images:
+
+```bash
+python3 -m src.predict path/to/image.jpg
+# Direct script execution is also supported:
+python3 src/predict.py path/to/image.png
+```
+
+The prediction loader converts images to RGB, resizes them to `64 x 64`, and
+uses the same input preprocessing as the training pipeline. It prints all
+class probabilities from most to least likely. The default model and class
+mapping are read from `artifacts/`; set `SATELLITE_ARTIFACTS_DIR` to use a
+different artifacts directory.
+
 ### Class mapping mismatch
 
 This means the saved model was produced from a different class ordering or

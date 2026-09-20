@@ -17,6 +17,9 @@ class DataConfig:
     """Dataset and input-pipeline settings."""
 
     image_size: tuple[int, int] = (64, 64)
+    # The classifier is intentionally RGB-only. For TIFF inputs, we discard the
+    # remaining spectral bands and keep only B4/B3/B2 to match standard RGB.
+    input_channels: int = 3
     # EuroSAT all-bands TIFFs use Sentinel-2 band order:
     # B1, B2, B3, B4, B5, B6, B7, B8, B8A, B9, B10, B11, B12.
     # Select B4/B3/B2 to provide the RGB input expected by the classifier.

@@ -10,10 +10,13 @@ def create_model(num_classes: int) -> tf.keras.Model:
     if num_classes < 2:
         raise ValueError(f"Expected at least two classes, got {num_classes}.")
 
-    inputs = tf.keras.Input(shape=(*DATA_CONFIG.image_size, 3), name="image")
+    inputs = tf.keras.Input(
+        shape=(*DATA_CONFIG.image_size, DATA_CONFIG.input_channels),
+        name="image",
+    )
     scaled_inputs = tf.keras.applications.mobilenet_v2.preprocess_input(inputs)
     backbone = tf.keras.applications.MobileNetV2(
-        input_shape=(*DATA_CONFIG.image_size, 3),
+        input_shape=(*DATA_CONFIG.image_size, DATA_CONFIG.input_channels),
         include_top=False,
         weights=MODEL_CONFIG.backbone_weights,
     )
