@@ -11,11 +11,13 @@ if __package__ in (None, ""):
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    from src.config import ARTIFACTS_DIR, MODEL_CONFIG
+    from src.config import ARTIFACTS_DIR, MODEL_CONFIG, OUTPUTS_DIR
     from src.data import preprocess_image
+    from src.visualize import plot_confidence_scores, plot_input_comparison
 else:
-    from .config import ARTIFACTS_DIR, MODEL_CONFIG
+    from .config import ARTIFACTS_DIR, MODEL_CONFIG, OUTPUTS_DIR
     from .data import preprocess_image
+    from .visualize import plot_confidence_scores, plot_input_comparison
 
 
 def _load_artifacts(
@@ -105,6 +107,17 @@ def main() -> None:
         raise SystemExit(f"Prediction failed: {error}") from error
     for class_name, probability in probabilities.items():
         print(f"{class_name:<24} {probability:.6f} ({probability:.2%})")
+    try:
+        processed_image = preprocess_image(args.image_path).numpy()
+        OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+        comparison_path = OUTPUTS_DIR / "comparison.png"
+        confidence_path = OUTPUTS_DIR / "confidence.png"
+        plot_input_comparison(args.image_path, processed_image, comparison_path)
+        plot_confidence_scores(probabilities, confidence_path)
+    except (OSError, ValueError, tf.errors.InvalidArgumentError) as error:
+        raise SystemExit(f"Could not save prediction visualizations: {error}") from error
+    print(f"\nSaved input comparison to {comparison_path}")
+    print(f"Saved confidence chart to {confidence_path}")
 
 
 if __name__ == "__main__":

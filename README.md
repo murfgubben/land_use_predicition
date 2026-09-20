@@ -286,7 +286,9 @@ The prediction loader converts images to RGB, resizes them to `64 x 64`, and
 uses the same input preprocessing as the training pipeline. It prints all
 class probabilities from most to least likely. The default model and class
 mapping are read from `artifacts/`; set `SATELLITE_ARTIFACTS_DIR` to use a
-different artifacts directory.
+different artifacts directory. The CLI also saves polished visualizations to
+`outputs/comparison.png` and `outputs/confidence.png`; set
+`SATELLITE_OUTPUTS_DIR` to use a different output directory.
 
 ### Class mapping mismatch
 
