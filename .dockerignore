@@ -1,0 +1,28 @@
+# Large or local-only project data.
+data/
+outputs/
+
+# Git metadata and local development state.
+.git/
+.gitignore
+.Rhistory
+.venv/
+venv/
+env/
+
+# Python-generated files.
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Local tooling and editor files.
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.vscode/
+.idea/
+
+# Documentation and other files not needed at runtime.
+README*
+Dockerfile*
+docker-compose*.yml
