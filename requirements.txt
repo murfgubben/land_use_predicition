@@ -3,3 +3,6 @@ scikit-learn==1.5.2
 tifffile==2024.8.30
 tensorflow==2.16.1
 matplotlib==3.9.2
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20

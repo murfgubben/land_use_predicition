@@ -195,6 +195,27 @@ def preprocess_image(image_path: str | Path) -> tf.Tensor:
     return _preprocess_image_tensor(tf.convert_to_tensor(str(image_path)))
 
 
+def preprocess_image_bytes(
+    contents: bytes, suffix: str = ".jpg"
+) -> tf.Tensor:
+    """Decode image bytes, convert to RGB, and resize for model input."""
+    if not contents:
+        raise ValueError("Image contents are empty.")
+    if suffix.lower() in {".tif", ".tiff"}:
+        image = tf.convert_to_tensor(_read_tiff(contents), dtype=tf.float32)
+    else:
+        image = tf.cast(
+            tf.image.decode_image(
+                contents,
+                channels=DATA_CONFIG.input_channels,
+                expand_animations=False,
+            ),
+            tf.float32,
+        )
+    image.set_shape([None, None, DATA_CONFIG.input_channels])
+    return tf.cast(tf.image.resize(image, DATA_CONFIG.image_size), tf.float32)
+
+
 def _decode_image(
     path: tf.Tensor, label: tf.Tensor
 ) -> tuple[tf.Tensor, tf.Tensor]:

@@ -12,11 +12,11 @@ if __package__ in (None, ""):
 
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from src.config import ARTIFACTS_DIR, MODEL_CONFIG, OUTPUTS_DIR
-    from src.data import preprocess_image
+    from src.data import preprocess_image, preprocess_image_bytes
     from src.visualize import plot_confidence_scores, plot_input_comparison
 else:
     from .config import ARTIFACTS_DIR, MODEL_CONFIG, OUTPUTS_DIR
-    from .data import preprocess_image
+    from .data import preprocess_image, preprocess_image_bytes
     from .visualize import plot_confidence_scores, plot_input_comparison
 
 
@@ -52,22 +52,19 @@ def _load_artifacts(
     return model, class_names
 
 
-def predict(image_path: str) -> dict[str, float]:
-    """Return sorted class probabilities for a JPEG, PNG, or supported TIFF."""
-    path = Path(image_path)
-    if not path.is_file():
-        raise FileNotFoundError(f"Image file not found: {path}")
-
-    try:
-        image = preprocess_image(path)
-    except (OSError, ValueError, tf.errors.InvalidArgumentError) as error:
-        raise ValueError(f"Could not decode image {path}: {error}") from error
-
-    model, class_names = _load_artifacts(ARTIFACTS_DIR)
+def predict_processed_image(
+    image: tf.Tensor,
+    model: tf.keras.Model,
+    class_names: tuple[str, ...],
+    source_name: str = "image",
+) -> dict[str, float]:
+    """Predict from a preprocessed image using an already loaded model."""
     try:
         output = np.asarray(model(tf.expand_dims(image, axis=0), training=False))
     except (tf.errors.InvalidArgumentError, ValueError) as error:
-        raise RuntimeError(f"Could not run inference for {path}: {error}") from error
+        raise RuntimeError(
+            f"Could not run inference for {source_name}: {error}"
+        ) from error
 
     if output.ndim != 2 or output.shape[0] != 1:
         raise ValueError(
@@ -91,6 +88,19 @@ def predict(image_path: str) -> dict[str, float]:
         reverse=True,
     )
     return {name: float(probability) for name, probability in ranked}
+
+
+def predict(image_path: str) -> dict[str, float]:
+    """Return sorted class probabilities for a JPEG, PNG, or supported TIFF."""
+    path = Path(image_path)
+    if not path.is_file():
+        raise FileNotFoundError(f"Image file not found: {path}")
+    try:
+        image = preprocess_image(path)
+    except (OSError, ValueError, tf.errors.InvalidArgumentError) as error:
+        raise ValueError(f"Could not decode image {path}: {error}") from error
+    model, class_names = _load_artifacts(ARTIFACTS_DIR)
+    return predict_processed_image(image, model, class_names, str(path))
 
 
 def _parse_args() -> argparse.Namespace:
