@@ -1,5 +1,6 @@
 """Presentable prediction visualizations."""
 
+from io import BytesIO
 from pathlib import Path
 
 import matplotlib
@@ -70,9 +71,9 @@ def plot_input_comparison(
         plt.close(figure)
 
 
-def plot_confidence_scores(
+def _plot_confidence_scores(
     probabilities: dict[str, float],
-    save_path: str | Path,
+    save_target: str | Path | BytesIO,
     top_n: int | None = None,
 ) -> None:
     """Save a horizontal probability chart, highlighting the top prediction."""
@@ -89,8 +90,11 @@ def plot_confidence_scores(
     if not np.all(np.isfinite(values)) or np.any(values < 0):
         raise ValueError("Probabilities must be finite, non-negative numbers.")
 
-    output_path = Path(save_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if isinstance(save_target, (str, Path)):
+        output_path = Path(save_target)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+    else:
+        output_path = save_target
     figure_height = max(4.0, 0.62 * len(names) + 1.2)
     figure, axis = plt.subplots(figsize=(9, figure_height), dpi=150)
     try:
@@ -126,3 +130,21 @@ def plot_confidence_scores(
         figure.savefig(output_path, format="png", dpi=150, bbox_inches="tight")
     finally:
         plt.close(figure)
+
+
+def plot_confidence_scores(
+    probabilities: dict[str, float],
+    save_path: str | Path,
+    top_n: int | None = None,
+) -> None:
+    """Save a horizontal probability chart, highlighting the top prediction."""
+    _plot_confidence_scores(probabilities, save_path, top_n)
+
+
+def confidence_scores_png(
+    probabilities: dict[str, float], top_n: int | None = None
+) -> bytes:
+    """Render the confidence chart to PNG bytes without writing a file."""
+    output = BytesIO()
+    _plot_confidence_scores(probabilities, output, top_n)
+    return output.getvalue()

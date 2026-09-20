@@ -290,6 +290,39 @@ different artifacts directory. The CLI also saves polished visualizations to
 `outputs/comparison.png` and `outputs/confidence.png`; set
 `SATELLITE_OUTPUTS_DIR` to use a different output directory.
 
+### Local FastAPI service
+
+Install the dependencies, then start the service from the project root:
+
+```bash
+python3 -m pip install -r requirements.txt
+python3 -m uvicorn src.api:app --reload
+```
+
+Check liveness:
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+Send a sample JPEG or PNG to `/predict`:
+
+```bash
+curl -X POST http://127.0.0.1:8000/predict \
+  -F "file=@path/to/sample.jpg"
+```
+
+The visualization endpoint returns a PNG directly:
+
+```bash
+curl -X POST http://127.0.0.1:8000/predict/visualize \
+  -F "file=@path/to/sample.jpg" \
+  --output confidence.png
+```
+
+Uploads are limited to 10 MB and support JPEG, PNG, and TIFF files. The
+trained model and class mapping are loaded once during application startup.
+
 ### Class mapping mismatch
 
 This means the saved model was produced from a different class ordering or
@@ -312,7 +345,10 @@ files instead of being placed in the TIFF pipeline.
 │   ├── data.py      # Indexing, splitting, decoding, augmentation
 │   ├── model.py     # MobileNetV2 model and fine-tuning
 │   ├── train.py     # Training entry point and artifact writing
-│   └── evaluate.py  # Held-out test evaluation
+│   ├── evaluate.py  # Held-out test evaluation
+│   ├── predict.py   # Prediction and CLI inference
+│   ├── visualize.py # Prediction visualization helpers
+│   └── api.py       # FastAPI service
 ├── requirements.txt # Pinned Python dependencies
 ├── data/             # Local dataset; ignored by Git
 └── artifacts/        # Generated outputs; ignored by Git
