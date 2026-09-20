@@ -1,13 +1,11 @@
 """FastAPI service for satellite image prediction."""
 
 from contextlib import asynccontextmanager
-from io import BytesIO
 from pathlib import Path
 from typing import AsyncIterator
 
 import tensorflow as tf
 from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -20,12 +18,10 @@ if __package__ in (None, ""):
         predict_processed_image,
     )
     from src.data import preprocess_image_bytes
-    from src.visualize import confidence_scores_png
     from src.config import ARTIFACTS_DIR
 else:
     from .predict import _load_artifacts, predict_processed_image
     from .data import preprocess_image_bytes
-    from .visualize import confidence_scores_png
     from .config import ARTIFACTS_DIR
 
 
@@ -142,22 +138,3 @@ async def predict_endpoint(
     )
 
 
-@app.post("/predict/visualize")
-async def predict_visualize_endpoint(
-    file: UploadFile = File(...),
-) -> StreamingResponse:
-    contents, suffix = await _read_upload(file)
-    probabilities, _ = _predict_upload(
-        contents, suffix, app.state.model, app.state.class_names
-    )
-    try:
-        chart = confidence_scores_png(probabilities)
-    except (ValueError, OSError) as error:
-        raise HTTPException(
-            status_code=500, detail=f"Could not generate visualization: {error}"
-        ) from error
-    return StreamingResponse(
-        BytesIO(chart),
-        media_type="image/png",
-        headers={"Content-Disposition": "inline; filename=confidence.png"},
-    )
