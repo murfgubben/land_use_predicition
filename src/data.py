@@ -137,7 +137,12 @@ def split_records(
 
 
 def _read_tiff(contents: np.ndarray | bytes) -> np.ndarray:
-    """Read an all-bands TIFF and return its RGB bands as float32."""
+    """Read an all-bands TIFF and return only its RGB bands as float32."""
+    if len(DATA_CONFIG.tiff_rgb_bands) != DATA_CONFIG.input_channels:
+        raise ValueError(
+            "The classifier uses exactly three RGB channels; "
+            f"got {len(DATA_CONFIG.tiff_rgb_bands)} TIFF channels configured."
+        )
     raw_contents = contents.item() if hasattr(contents, "item") else contents
     image = tifffile.imread(BytesIO(raw_contents))
     if image.ndim != 3:
@@ -159,11 +164,11 @@ def _read_tiff(contents: np.ndarray | bytes) -> np.ndarray:
 def _decode_tiff(path: tf.Tensor) -> tf.Tensor:
     contents = tf.io.read_file(path)
     image = tf.numpy_function(_read_tiff, [contents], tf.float32)
-    image.set_shape([None, None, len(DATA_CONFIG.tiff_rgb_bands)])
+    image.set_shape([None, None, DATA_CONFIG.input_channels])
     return image
 
 
-def _decode_image(path: tf.Tensor, label: tf.Tensor) -> tuple[tf.Tensor, tf.Tensor]:
+def _preprocess_image_tensor(path: tf.Tensor) -> tf.Tensor:
     image = tf.io.read_file(path)
     is_tiff = tf.strings.regex_full_match(
         tf.strings.lower(path), r".*\.(tif|tiff)"
@@ -173,14 +178,27 @@ def _decode_image(path: tf.Tensor, label: tf.Tensor) -> tuple[tf.Tensor, tf.Tens
         lambda: _decode_tiff(path),
         lambda: tf.cast(
             tf.image.decode_image(
-                image, channels=3, expand_animations=False
+                image,
+                channels=DATA_CONFIG.input_channels,
+                expand_animations=False,
             ),
             tf.float32,
         ),
     )
-    image.set_shape([None, None, 3])
+    image.set_shape([None, None, DATA_CONFIG.input_channels])
     image = tf.image.resize(image, DATA_CONFIG.image_size)
-    return tf.cast(image, tf.float32), label
+    return tf.cast(image, tf.float32)
+
+
+def preprocess_image(image_path: str | Path) -> tf.Tensor:
+    """Read, convert to RGB, and resize one image for model input."""
+    return _preprocess_image_tensor(tf.convert_to_tensor(str(image_path)))
+
+
+def _decode_image(
+    path: tf.Tensor, label: tf.Tensor
+) -> tuple[tf.Tensor, tf.Tensor]:
+    return _preprocess_image_tensor(path), label
 
 
 def _augment_image(
