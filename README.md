@@ -312,14 +312,6 @@ curl -X POST http://127.0.0.1:8000/predict \
   -F "file=@path/to/sample.jpg"
 ```
 
-The visualization endpoint returns a PNG directly:
-
-```bash
-curl -X POST http://127.0.0.1:8000/predict/visualize \
-  -F "file=@path/to/sample.jpg" \
-  --output confidence.png
-```
-
 Uploads are limited to 10 MB and support JPEG, PNG, and TIFF files. The
 trained model and class mapping are loaded once during application startup.
 
