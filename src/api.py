@@ -7,7 +7,7 @@ from typing import AsyncIterator
 import tensorflow as tf
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 if __package__ in (None, ""):
     import sys
@@ -108,13 +108,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],   
-    allow_methods=["POST", "GET"],
-    allow_headers=["*"],
-)
-
 @app.get("/health")
 async def health() -> dict[str, str]:
     if not hasattr(app.state, "model"):
@@ -138,3 +131,8 @@ async def predict_endpoint(
     )
 
 
+app.mount(
+    "/",
+    StaticFiles(directory=Path(__file__).resolve().parent / "static", html=True),
+    name="frontend",
+)
