@@ -9,6 +9,7 @@ import tensorflow as tf
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 if __package__ in (None, ""):
     import sys
@@ -111,6 +112,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   
+    allow_methods=["POST", "GET"],
+    allow_headers=["*"],
+)
 
 @app.get("/health")
 async def health() -> dict[str, str]:
