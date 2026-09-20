@@ -10,6 +10,7 @@ DATA_DIR = Path(os.getenv("SATELLITE_DATA_DIR", PROJECT_ROOT / "data"))
 ARTIFACTS_DIR = Path(
     os.getenv("SATELLITE_ARTIFACTS_DIR", PROJECT_ROOT / "artifacts")
 )
+OUTPUTS_DIR = Path(os.getenv("SATELLITE_OUTPUTS_DIR", PROJECT_ROOT / "outputs"))
 
 
 @dataclass(frozen=True)
