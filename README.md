@@ -1,7 +1,9 @@
 # Satellite image classifier
 
 This repository trains an image classifier for the [EuroSAT](https://github.com/phelber/EuroSAT)
-land-use and land-cover dataset. It is a small, CPU-friendly TensorFlow
+land-use and land-cover dataset. The project is currently live [here](https://satellite-classifier-127775329586.europe-north1.run.app/), where you can use a trained model for land use prediction of satellite images.
+
+It is a small, CPU-friendly TensorFlow
 project, but the same structure is useful for understanding a typical
 supervised image-classification workflow:
 
